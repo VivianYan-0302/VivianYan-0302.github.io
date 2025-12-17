@@ -13,12 +13,11 @@
       align-items: center;
       padding: 20px;
     }
-
     h1 { margin-bottom: 10px; }
 
     .info {
       display: flex;
-      gap: 18px;
+      gap: 16px;
       margin-bottom: 12px;
       font-size: 16px;
     }
@@ -53,13 +52,8 @@
       transform-style: preserve-3d;
     }
 
-    .card.flipped .card-inner {
-      transform: rotateY(180deg);
-    }
-
-    .card.matched {
-      pointer-events: none;
-    }
+    .card.flipped .card-inner { transform: rotateY(180deg); }
+    .card.matched { pointer-events: none; }
 
     .card-front, .card-back {
       position: absolute;
@@ -73,19 +67,14 @@
       border-radius: 12px;
     }
 
-    .card-front {
-      background: #4f46e5;
-      color: white;
-    }
-
+    .card-front { background: #4f46e5; color: white; }
     .card-back {
       background: white;
       transform: rotateY(180deg);
       border: 2px solid #e5e7eb;
     }
 
-    /* 開始 / 過關畫面 */
-    #levelClear {
+    #overlay {
       position: fixed;
       inset: 0;
       background: rgba(0,0,0,0.5);
@@ -95,7 +84,7 @@
       z-index: 10;
     }
 
-    #levelClear .box {
+    #overlay .box {
       background: white;
       padding: 28px 36px;
       border-radius: 16px;
@@ -110,29 +99,26 @@
 
 <div class="info">
   <div>🎯 關卡：<span id="level">1</span></div>
-  <div>⭐ 配對：<span id="score">0</span></div>
+  <div>⏱ 時間：<span id="time">0</span>s</div>
+  <div>❤️ 剩餘次數：<span id="moves">0</span></div>
+  <div>⭐ 配對成功：<span id="score">0</span></div>
 </div>
 
 <div>
-  <button onclick="resetGame()">重新開始</button>
-  <select id="difficulty" onchange="changeDifficulty()">
-    <option value="4">4×4（簡單）</option>
-    <option value="5">5×5（困難）</option>
-  </select>
+  <button onclick="location.reload()">重新整理</button>
+  <button onclick="restartAll()">重新闖關</button>
 </div>
 
 <div class="board" id="board"></div>
 
-<!-- 開始 / 過關畫面 -->
-<div id="levelClear">
+<div id="overlay">
   <div class="box">
-    <h2 id="clearText">🎮 遊戲開始</h2>
-    <button id="nextBtn" onclick="nextLevel()">▶️ 開始遊戲</button>
+    <h2 id="overlayText">🎮 遊戲開始</h2>
+    <button id="overlayBtn" onclick="overlayAction()">▶️ 開始遊戲</button>
   </div>
 </div>
 
 <script>
-  // 穩定顯示的非蔬果 emoji
   const allSymbols = [
     '🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐨','🐯',
     '🦁','🐮','🐷','🐸','🐵','🐔','🐧','🐦','🐤','🦄',
@@ -142,22 +128,38 @@
   let boardSize = 4;
   let level = 1;
   let score = 0;
+  let movesLeft = 0;
   let firstCard = null;
   let lockBoard = false;
-  let gameStarted = false;
+  let timer = 0;
+  let timerId = null;
+  let state = 'start'; // start | playing | fail | clear
 
-  function shuffle(array) {
-    for (let i = array.length - 1; i > 0; i--) {
+  function shuffle(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
-      [array[i], array[j]] = [array[j], array[i]];
+      [arr[i], arr[j]] = [arr[j], arr[i]];
     }
-    return array;
+    return arr;
+  }
+
+  function startTimer() {
+    clearInterval(timerId);
+    timer = 0;
+    document.getElementById('time').innerText = timer;
+    timerId = setInterval(() => {
+      timer++;
+      document.getElementById('time').innerText = timer;
+    }, 1000);
   }
 
   function setupLevel() {
     score = 0;
+    movesLeft = 15;
     document.getElementById('level').innerText = level;
     document.getElementById('score').innerText = score;
+    document.getElementById('moves').innerText = movesLeft;
+    startTimer();
   }
 
   function createBoard() {
@@ -173,9 +175,6 @@
     const symbols = shuffle([...allSymbols]).slice(0, pairCount);
     const cards = shuffle([...symbols, ...symbols]);
 
-    // 5×5 多一張自動完成卡
-    if (boardSize === 5) cards.push('⭐');
-
     cards.forEach(symbol => {
       const card = document.createElement('div');
       card.className = 'card';
@@ -183,21 +182,14 @@
         <div class="card-inner">
           <div class="card-front">?</div>
           <div class="card-back">${symbol}</div>
-        </div>
-      `;
-
-      if (boardSize === 5 && symbol === '⭐') {
-        card.classList.add('flipped', 'matched');
-      } else {
-        card.addEventListener('click', () => flipCard(card, symbol));
-      }
-
+        </div>`;
+      card.addEventListener('click', () => flipCard(card, symbol));
       board.appendChild(card);
     });
   }
 
   function flipCard(card, symbol) {
-    if (lockBoard || card.classList.contains('flipped')) return;
+    if (lockBoard || card.classList.contains('flipped') || state !== 'playing') return;
 
     card.classList.add('flipped');
 
@@ -214,12 +206,21 @@
       firstCard = null;
 
       if (score === Math.floor((boardSize * boardSize) / 2)) {
-        document.getElementById('clearText').innerText = `🎉 第 ${level} 關結束`;
-        document.getElementById('nextBtn').innerText = '➡️ 下一關';
-        document.getElementById('levelClear').style.display = 'flex';
+        clearInterval(timerId);
+        state = 'clear';
+        showOverlay(`第 ${level} 關結束`, '➡️ 下一關');
       }
     } else {
       lockBoard = true;
+      movesLeft--;
+      document.getElementById('moves').innerText = movesLeft;
+
+      if (movesLeft <= 0) {
+        clearInterval(timerId);
+        state = 'fail';
+        showOverlay(`第 ${level} 關失敗`, '🔁 從新過關');
+      }
+
       setTimeout(() => {
         card.classList.remove('flipped');
         firstCard.card.classList.remove('flipped');
@@ -229,35 +230,36 @@
     }
   }
 
-  function nextLevel() {
-    document.getElementById('levelClear').style.display = 'none';
+  function showOverlay(text, btnText) {
+    document.getElementById('overlayText').innerText = text;
+    document.getElementById('overlayBtn').innerText = btnText;
+    document.getElementById('overlay').style.display = 'flex';
+  }
 
-    if (!gameStarted) {
-      gameStarted = true;
-      level = 1;
-    } else {
+  function overlayAction() {
+    document.getElementById('overlay').style.display = 'none';
+
+    if (state === 'start') {
+      state = 'playing';
+    } else if (state === 'clear') {
       level++;
+      state = 'playing';
+    } else if (state === 'fail') {
+      state = 'playing';
     }
 
     createBoard();
   }
 
-  function resetGame() {
+  function restartAll() {
     level = 1;
-    gameStarted = false;
-    document.getElementById('clearText').innerText = '🎮 遊戲開始';
-    document.getElementById('nextBtn').innerText = '▶️ 開始遊戲';
-    document.getElementById('levelClear').style.display = 'flex';
-    createBoard();
+    state = 'start';
+    clearInterval(timerId);
+    showOverlay('🎮 遊戲開始', '▶️ 開始遊戲');
   }
 
-  function changeDifficulty() {
-    boardSize = parseInt(document.getElementById('difficulty').value);
-    resetGame();
-  }
-
-  // 一開始只顯示開始畫面
-  document.getElementById('levelClear').style.display = 'flex';
+  // 初始畫面
+  showOverlay('🎮 遊戲開始', '▶️ 開始遊戲');
 </script>
 
 </body>
