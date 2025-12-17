@@ -22,6 +22,14 @@
       font-size: 16px;
     }
 
+    .controls {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+
     button, select {
       margin: 6px;
       padding: 8px 16px;
@@ -104,9 +112,13 @@
   <div>⭐ 配對成功：<span id="score">0</span></div>
 </div>
 
-<div>
+<div class="controls">
   <button onclick="location.reload()">重新整理</button>
   <button onclick="restartAll()">重新闖關</button>
+  <select id="difficulty" onchange="changeDifficulty()">
+    <option value="4">4×4（標準）</option>
+    <option value="5">5×5（困難）</option>
+  </select>
 </div>
 
 <div class="board" id="board"></div>
@@ -125,7 +137,7 @@
     '⭐','🌙','☀️','⚡','🔥','💧','❄️','🌈','🎈','🎵'
   ];
 
-  let boardSize = 4;
+  let boardSize = 4; // 4 或 5
   let level = 1;
   let score = 0;
   let movesLeft = 0;
@@ -171,11 +183,38 @@
 
     setupLevel();
 
-    const pairCount = Math.floor((boardSize * boardSize) / 2);
+    let pairCount = Math.floor((boardSize * boardSize) / 2);
+
+    // 5×5 模式：預留 1 張特殊卡
+    let hasSpecial = false;
+    if (boardSize === 5) {
+      pairCount = Math.floor((boardSize * boardSize - 1) / 2);
+      hasSpecial = true;
+    }((boardSize * boardSize) / 2);
     const symbols = shuffle([...allSymbols]).slice(0, pairCount);
-    const cards = shuffle([...symbols, ...symbols]);
+    let cards = shuffle([...symbols, ...symbols]);
+
+    if (hasSpecial) {
+      cards.push('🔷'); // 特殊預設卡
+    }([...symbols, ...symbols]);
 
     cards.forEach(symbol => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `
+        <div class="card-inner">
+          <div class="card-front">?</div>
+          <div class="card-back">${symbol}</div>
+        </div>`;
+
+      if (hasSpecial && symbol === '🔷') {
+        card.classList.add('flipped', 'matched');
+      } else {
+        card.addEventListener('click', () => flipCard(card, symbol));
+      }
+
+      board.appendChild(card);
+    });(symbol => {
       const card = document.createElement('div');
       card.className = 'card';
       card.innerHTML = `
@@ -206,9 +245,12 @@
       firstCard = null;
 
       if (score === Math.floor((boardSize * boardSize) / 2)) {
-        clearInterval(timerId);
-        state = 'clear';
-        showOverlay(`第 ${level} 關結束`, '➡️ 下一關');
+        // 等最後一張牌翻開動畫完成後才結束
+        setTimeout(() => {
+          clearInterval(timerId);
+          state = 'clear';
+          showOverlay(`第 ${level} 關結束`, '➡️ 下一關');
+        }, 450);
       }
     } else {
       lockBoard = true;
@@ -249,6 +291,14 @@
     }
 
     createBoard();
+  }
+
+  function changeDifficulty() {
+    boardSize = parseInt(document.getElementById('difficulty').value);
+    level = 1;
+    state = 'start';
+    clearInterval(timerId);
+    showOverlay('🎮 遊戲開始', '▶️ 開始遊戲');
   }
 
   function restartAll() {
