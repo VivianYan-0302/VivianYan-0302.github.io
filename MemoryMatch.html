@@ -1,92 +1,105 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>純 HTML 靜態拼圖 (Image Map)</title>
-    
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            text-align: center;
-        }
-        .info-box {
-            border: 2px solid #007bff;
-            padding: 15px;
-            margin: 20px auto;
-            max-width: 600px;
-            text-align: left;
-            border-radius: 8px;
-            background-color: #f0f8ff;
-        }
-        hr {
-            margin: 40px auto;
-            max-width: 600px;
-        }
-    </style>
-</head>
-<body>
+let time = 0;
+let timerId = null;
 
-    <h1>🧩 靜態拼圖：點擊線索揭示答案</h1>
-    
-    <p>請點擊下方的圖片。點擊圖片上不同顏色的區域，頁面將會跳轉到下方的「解鎖訊息區」來查看線索。</p>
 
-    <img src="mystery_image.jpg" 
-         usemap="#puz_map" 
-         alt="神秘圖片，被分割成四個區域" 
-         style="width: 600px; height: 400px; border: 5px solid #007bff;">
-    
-    <map name="puz_map" id="puz_map">
-        <area shape="rect" coords="0, 0, 300, 200" 
-              alt="拼圖塊 A" 
-              title="線索 A: 圖片的左上角"
-              href="#info_A"> 
+function shuffle(array) {
+for (let i = array.length - 1; i > 0; i--) {
+const j = Math.floor(Math.random() * (i + 1));
+[array[i], array[j]] = [array[j], array[i]];
+}
+return array;
+}
 
-        <area shape="rect" coords="300, 0, 600, 200" 
-              alt="拼圖塊 B" 
-              title="線索 B: 圖片的右上角"
-              href="#info_B"> 
 
-        <area shape="rect" coords="0, 200, 300, 400" 
-              alt="拼圖塊 C" 
-              title="線索 C: 圖片的左下角"
-              href="#info_C">
+function startTimer() {
+clearInterval(timerId);
+time = 0;
+document.getElementById('time').innerText = time;
+timerId = setInterval(() => {
+time++;
+document.getElementById('time').innerText = time;
+}, 1000);
+}
 
-        <area shape="rect" coords="300, 200, 600, 400" 
-              alt="拼圖塊 D" 
-              title="線索 D: 圖片的右下角 (最終答案)"
-              href="#info_D">
-              
-        </map>
 
-    <hr>
+function createBoard() {
+const board = document.getElementById('board');
+board.innerHTML = '';
+score = 0;
+document.getElementById('score').innerText = score;
+firstCard = null;
+lockBoard = false;
 
-    <h2>解鎖訊息區 (線索)</h2>
-    
-    <div id="info_A" class="info-box">
-        <h3>🧩 線索 A：關鍵字是「藍色」</h3>
-        <p>這條線索指出圖片的主體與「海洋」或「天空」有關。請點擊下一塊區域！</p>
-        <p><a href="#">回到頂部查看圖片</a></p>
-    </div>
 
-    <div id="info_B" class="info-box">
-        <h3>🧩 線索 B：關鍵字是「船」</h3>
-        <p>圖片的背景似乎有一艘小船在遠處航行，這加強了與海洋的關聯。</p>
-        <p><a href="#">回到頂部查看圖片</a></p>
-    </div>
+cards = shuffle([...symbols, ...symbols]);
 
-    <div id="info_C" class="info-box">
-        <h3>🧩 線索 C：關鍵字是「島嶼」</h3>
-        <p>在左下角的某個角落，隱約可見一座熱帶島嶼的輪廓。</p>
-        <p><a href="#">回到頂部查看圖片</a></p>
-    </div>
 
-    <div id="info_D" class="info-box" style="border-color: #dc3545;">
-        <h3>🎉 最終答案揭示！</h3>
-        <p>恭喜您，集齊所有線索！這張圖片描繪的是一個著名的旅遊景點：**「馬爾地夫 (Maldives)」**！</p>
-        <p><a href="#">回到頂部查看圖片</a></p>
-    </div>
+cards.forEach(symbol => {
+const card = document.createElement('div');
+card.className = 'card';
+card.innerHTML = `
+<div class="card-inner">
+<div class="card-front">?</div>
+<div class="card-back">${symbol}</div>
+</div>
+`;
+card.addEventListener('click', () => flipCard(card, symbol));
+board.appendChild(card);
+});
 
+
+startTimer();
+}
+
+
+function flipCard(card, symbol) {
+if (lockBoard) return;
+if (card.classList.contains('flipped')) return;
+
+
+card.classList.add('flipped');
+
+
+if (!firstCard) {
+firstCard = { card, symbol };
+return;
+}
+
+
+// 第二張卡
+if (firstCard.symbol === symbol) {
+// 配對成功
+card.classList.add('matched');
+firstCard.card.classList.add('matched');
+score++;
+document.getElementById('score').innerText = score;
+firstCard = null;
+
+
+if (score === symbols.length) {
+clearInterval(timerId);
+setTimeout(() => alert(`🎉 完成！用時 ${time} 秒`), 300);
+}
+} else {
+// 配對失敗
+lockBoard = true;
+setTimeout(() => {
+card.classList.remove('flipped');
+firstCard.card.classList.remove('flipped');
+firstCard = null;
+lockBoard = false;
+}, 800);
+}
+}
+
+
+function resetGame() {
+createBoard();
+}
+
+
+createBoard();
+</script>
 </body>
 </html>
