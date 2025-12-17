@@ -2,40 +2,133 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>記憶配對遊戲</title>
-    <link rel="stylesheet" href="style.css">
+    <title>單頁式故事畫廊 - HTML 錨點練習</title>
 </head>
 <body>
-    <h1>記憶配對遊戲</h1>
 
-    <div class="game-board">
-        <div class="card" data-card="A">
-            <div class="card-inner">
-                <div class="card-front"></div>
-                <div class="card-back">A</div>
-            </div>
-        </div>
-        <div class="card" data-card="B">
-            <div class="card-inner">
-                <div class="card-front"></div>
-                <div class="card-back">B</div>
-            </div>
-        </div>
-        <div class="card" data-card="A">
-            <div class="card-inner">
-                <div class="card-front"></div>
-                <div class="card-back">A</div>
-            </div>
-        </div>
-        <div class="card" data-card="B">
-            <div class="card-inner">
-                <div class="card-front"></div>
-                <div class="card-back">B</div>
-            </div>
-        </div>
-        </div>
+    <header>
+        <h1 id="top">我的 HTML 學習專案：單頁故事畫廊</h1>
+        
+        <nav>
+            <ul>
+                <li><a href="#summary">📚 故事簡介</a></li>
+                <li><a href="#chapter1">📜 第一章</a></li>
+                <li><a href="#chapter2">🔭 第二章</a></li>
+                <li><a href="#about">👤 關於我</a></li>
+            </ul>
+        </nav>
+        <hr> </header>
 
-    <script src="game.js"></script>
+    <main>
+
+        <section id="summary">
+            <h2>📚 故事簡介：時空旅行者的遺物</h2>
+            <p>這是一個練習 HTML 結構的單頁專案。點擊上方的導航連結，您可以快速跳轉到頁面的不同章節。這個故事講述了一位普通的圖書館管理員，無意中發現了一本可以帶領他穿梭時空的手札。</p>
+
+            <h3>📖 章節快速入口</h3>
+            <ol>
+                <li><a href="#chapter1">第一章：覺醒的森林</a></li>
+                <li><a href="#chapter2">第二章：星辰之海</a></li>
+            </ol>
+        </section>
+
+        <hr>
+
+        <section id="chapter1">
+            <article>
+                <h2>📜 第一章：覺醒的森林</h2>
+                
+                <p>主角踏入了古老的森林。四周靜謐無聲，只有微風吹拂樹葉的聲音，以及空氣中瀰漫的泥土與露水氣息。</p>
+                
+                <figure>
+                    <img src="images/pic1.jpg" alt="古老森林的場景，一棵巨大的發光樹木" width="600">
+                    <figcaption>圖 1.1：覺醒的森林入口處，光線從樹縫間灑落。</figcaption>
+                </figure>
+                
+                <p>根據手札的記載，森林裡隱藏著某些關鍵的線索。主角翻閱了手札中關於此地的物種觀察紀錄：</p>
+                
+                <table border="1">
+                    <caption>森林裡的物種觀察紀錄</caption>
+                    <thead>
+                        <tr>
+                            <th>物種名稱</th>
+                            <th>數量估計</th>
+                            <th>特徵描述</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>夜行貓頭鷹</td>
+                            <td>5</td>
+                            <td>雙眼發出微弱的藍光。</td>
+                        </tr>
+                        <tr>
+                            <td>閃光蝴蝶</td>
+                            <td>20+</td>
+                            <td>翅膀有特殊的螢光紋理。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </article>
+            <p><a href="#top">⬆️ 回到頂部</a></p>
+        </section>
+
+        <hr>
+
+        <section id="chapter2">
+            <article>
+                <h2>🔭 第二章：星辰之海</h2>
+                
+                <p>主角穿過了森林，眼前的景象豁然開朗。一片由無數閃爍光點組成的「海」展現在眼前。手札上寫著一段引文：</p>
+                
+                <blockquote>
+                    <p>「當森林低語時，海便沉默；當海閃爍時，時間已逝。」</p>
+                    <footer>— 時空旅行者日誌</footer>
+                </blockquote>
+                
+                <figure>
+                    <img src="images/pic2.jpg" alt="一片由星光組成的海洋" width="600">
+                    <figcaption>圖 2.1：星辰之海的壯觀景象。</figcaption>
+                </figure>
+                
+                <p>為了穿越這片海，主角需要收集三樣物品：</p>
+                
+                <ul>
+                    <li>閃光蝴蝶的鱗粉</li>
+                    <li>月亮井的露水</li>
+                    <li>三個遺落的時鐘零件</li>
+                </ul>
+            </article>
+            <p><a href="#top">⬆️ 回到頂部</a></p>
+        </section>
+
+        <hr>
+        
+        <section id="about">
+            <h2>👤 關於我的 HTML 學習旅程</h2>
+            
+            <figure>
+                <img src="images/author.jpg" alt="作者的肖像照片" width="150">
+                <figcaption>圖 A.1：努力學習中的初學者。</figcaption>
+            </figure>
+            
+            <p>我是一名剛開始學習網頁開發的初學者。這個專案是用來練習純粹的 HTML 結構與語義化標籤。</p>
+            
+            <h3>聯絡與資源 (練習外部連結)</h3>
+            <p>如果您有任何建議，歡迎聯繫或參考我的學習資源：</p>
+            <ul>
+                <li><a href="mailto:your.email@example.com">發送電子郵件給我</a></li>
+                <li><a href="https://github.com/yourusername" target="_blank">我的 GitHub 專頁</a></li>
+            </ul>
+            <p><a href="#top">⬆️ 回到頂部</a></p>
+        </section>
+
+    </main>
+
+    <footer>
+        <hr>
+        <p>&copy; 2025 HTML 初學者專案。所有內容版權所有。</p>
+    </footer>
+
 </body>
 </html>
