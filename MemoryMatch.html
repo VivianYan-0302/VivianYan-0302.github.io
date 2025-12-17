@@ -1,134 +1,92 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
-    <title>單頁式故事畫廊 - HTML 錨點練習</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>純 HTML 靜態拼圖 (Image Map)</title>
+    
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            text-align: center;
+        }
+        .info-box {
+            border: 2px solid #007bff;
+            padding: 15px;
+            margin: 20px auto;
+            max-width: 600px;
+            text-align: left;
+            border-radius: 8px;
+            background-color: #f0f8ff;
+        }
+        hr {
+            margin: 40px auto;
+            max-width: 600px;
+        }
+    </style>
 </head>
 <body>
 
-    <header>
-        <h1 id="top">我的 HTML 學習專案：單頁故事畫廊</h1>
-        
-        <nav>
-            <ul>
-                <li><a href="#summary">📚 故事簡介</a></li>
-                <li><a href="#chapter1">📜 第一章</a></li>
-                <li><a href="#chapter2">🔭 第二章</a></li>
-                <li><a href="#about">👤 關於我</a></li>
-            </ul>
-        </nav>
-        <hr> </header>
+    <h1>🧩 靜態拼圖：點擊線索揭示答案</h1>
+    
+    <p>請點擊下方的圖片。點擊圖片上不同顏色的區域，頁面將會跳轉到下方的「解鎖訊息區」來查看線索。</p>
 
-    <main>
+    <img src="mystery_image.jpg" 
+         usemap="#puz_map" 
+         alt="神秘圖片，被分割成四個區域" 
+         style="width: 600px; height: 400px; border: 5px solid #007bff;">
+    
+    <map name="puz_map" id="puz_map">
+        <area shape="rect" coords="0, 0, 300, 200" 
+              alt="拼圖塊 A" 
+              title="線索 A: 圖片的左上角"
+              href="#info_A"> 
 
-        <section id="summary">
-            <h2>📚 故事簡介：時空旅行者的遺物</h2>
-            <p>這是一個練習 HTML 結構的單頁專案。點擊上方的導航連結，您可以快速跳轉到頁面的不同章節。這個故事講述了一位普通的圖書館管理員，無意中發現了一本可以帶領他穿梭時空的手札。</p>
+        <area shape="rect" coords="300, 0, 600, 200" 
+              alt="拼圖塊 B" 
+              title="線索 B: 圖片的右上角"
+              href="#info_B"> 
 
-            <h3>📖 章節快速入口</h3>
-            <ol>
-                <li><a href="#chapter1">第一章：覺醒的森林</a></li>
-                <li><a href="#chapter2">第二章：星辰之海</a></li>
-            </ol>
-        </section>
+        <area shape="rect" coords="0, 200, 300, 400" 
+              alt="拼圖塊 C" 
+              title="線索 C: 圖片的左下角"
+              href="#info_C">
 
-        <hr>
+        <area shape="rect" coords="300, 200, 600, 400" 
+              alt="拼圖塊 D" 
+              title="線索 D: 圖片的右下角 (最終答案)"
+              href="#info_D">
+              
+        </map>
 
-        <section id="chapter1">
-            <article>
-                <h2>📜 第一章：覺醒的森林</h2>
-                
-                <p>主角踏入了古老的森林。四周靜謐無聲，只有微風吹拂樹葉的聲音，以及空氣中瀰漫的泥土與露水氣息。</p>
-                
-                <figure>
-                    <img src="images/pic1.jpg" alt="古老森林的場景，一棵巨大的發光樹木" width="600">
-                    <figcaption>圖 1.1：覺醒的森林入口處，光線從樹縫間灑落。</figcaption>
-                </figure>
-                
-                <p>根據手札的記載，森林裡隱藏著某些關鍵的線索。主角翻閱了手札中關於此地的物種觀察紀錄：</p>
-                
-                <table border="1">
-                    <caption>森林裡的物種觀察紀錄</caption>
-                    <thead>
-                        <tr>
-                            <th>物種名稱</th>
-                            <th>數量估計</th>
-                            <th>特徵描述</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>夜行貓頭鷹</td>
-                            <td>5</td>
-                            <td>雙眼發出微弱的藍光。</td>
-                        </tr>
-                        <tr>
-                            <td>閃光蝴蝶</td>
-                            <td>20+</td>
-                            <td>翅膀有特殊的螢光紋理。</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </article>
-            <p><a href="#top">⬆️ 回到頂部</a></p>
-        </section>
+    <hr>
 
-        <hr>
+    <h2>解鎖訊息區 (線索)</h2>
+    
+    <div id="info_A" class="info-box">
+        <h3>🧩 線索 A：關鍵字是「藍色」</h3>
+        <p>這條線索指出圖片的主體與「海洋」或「天空」有關。請點擊下一塊區域！</p>
+        <p><a href="#">回到頂部查看圖片</a></p>
+    </div>
 
-        <section id="chapter2">
-            <article>
-                <h2>🔭 第二章：星辰之海</h2>
-                
-                <p>主角穿過了森林，眼前的景象豁然開朗。一片由無數閃爍光點組成的「海」展現在眼前。手札上寫著一段引文：</p>
-                
-                <blockquote>
-                    <p>「當森林低語時，海便沉默；當海閃爍時，時間已逝。」</p>
-                    <footer>— 時空旅行者日誌</footer>
-                </blockquote>
-                
-                <figure>
-                    <img src="images/pic2.jpg" alt="一片由星光組成的海洋" width="600">
-                    <figcaption>圖 2.1：星辰之海的壯觀景象。</figcaption>
-                </figure>
-                
-                <p>為了穿越這片海，主角需要收集三樣物品：</p>
-                
-                <ul>
-                    <li>閃光蝴蝶的鱗粉</li>
-                    <li>月亮井的露水</li>
-                    <li>三個遺落的時鐘零件</li>
-                </ul>
-            </article>
-            <p><a href="#top">⬆️ 回到頂部</a></p>
-        </section>
+    <div id="info_B" class="info-box">
+        <h3>🧩 線索 B：關鍵字是「船」</h3>
+        <p>圖片的背景似乎有一艘小船在遠處航行，這加強了與海洋的關聯。</p>
+        <p><a href="#">回到頂部查看圖片</a></p>
+    </div>
 
-        <hr>
-        
-        <section id="about">
-            <h2>👤 關於我的 HTML 學習旅程</h2>
-            
-            <figure>
-                <img src="images/author.jpg" alt="作者的肖像照片" width="150">
-                <figcaption>圖 A.1：努力學習中的初學者。</figcaption>
-            </figure>
-            
-            <p>我是一名剛開始學習網頁開發的初學者。這個專案是用來練習純粹的 HTML 結構與語義化標籤。</p>
-            
-            <h3>聯絡與資源 (練習外部連結)</h3>
-            <p>如果您有任何建議，歡迎聯繫或參考我的學習資源：</p>
-            <ul>
-                <li><a href="mailto:your.email@example.com">發送電子郵件給我</a></li>
-                <li><a href="https://github.com/yourusername" target="_blank">我的 GitHub 專頁</a></li>
-            </ul>
-            <p><a href="#top">⬆️ 回到頂部</a></p>
-        </section>
+    <div id="info_C" class="info-box">
+        <h3>🧩 線索 C：關鍵字是「島嶼」</h3>
+        <p>在左下角的某個角落，隱約可見一座熱帶島嶼的輪廓。</p>
+        <p><a href="#">回到頂部查看圖片</a></p>
+    </div>
 
-    </main>
-
-    <footer>
-        <hr>
-        <p>&copy; 2025 HTML 初學者專案。所有內容版權所有。</p>
-    </footer>
+    <div id="info_D" class="info-box" style="border-color: #dc3545;">
+        <h3>🎉 最終答案揭示！</h3>
+        <p>恭喜您，集齊所有線索！這張圖片描繪的是一個著名的旅遊景點：**「馬爾地夫 (Maldives)」**！</p>
+        <p><a href="#">回到頂部查看圖片</a></p>
+    </div>
 
 </body>
 </html>
