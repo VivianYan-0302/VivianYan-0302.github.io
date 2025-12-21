@@ -20,6 +20,7 @@
       gap: 16px;
       margin-bottom: 12px;
       font-size: 16px;
+      flex-wrap: wrap;
     }
 
     .controls {
@@ -31,7 +32,6 @@
     }
 
     button, select {
-      margin: 6px;
       padding: 8px 16px;
       border-radius: 10px;
       border: none;
@@ -56,7 +56,6 @@
     }
 
     .card-inner {
-      position: relative;
       width: 100%;
       height: 100%;
       transition: transform 0.4s;
@@ -86,18 +85,10 @@
     }
 
     .card.success { animation: pop 0.3s; }
-    @keyframes pop {
-      0% { transform: scale(1); }
-      50% { transform: scale(1.15); }
-      100% { transform: scale(1); }
-    }
+    @keyframes pop { 50% { transform: scale(1.15); } }
 
     .board.clear .card { animation: flash 0.5s; }
-    @keyframes flash {
-      0% { background: transparent; }
-      50% { background: #bbf7d0; }
-      100% { background: transparent; }
-    }
+    @keyframes flash { 50% { background: #bbf7d0; } }
 
     #overlay {
       position: fixed;
@@ -194,7 +185,6 @@
   function startTimer() {
     if (timerStarted) return;
     timerStarted = true;
-    clearInterval(timerId);
     timerId = setInterval(() => {
       timer++;
       document.getElementById('time').innerText = timer;
@@ -314,11 +304,10 @@
       state = 'playing';
       createBoard();
     } else if (state === 'clear') {
-      level++;              // 過關才加關卡
+      level++;
       state = 'playing';
       createBoard();
     } else if (state === 'fail') {
-      // 失敗 → 重玩「同一關」
       state = 'playing';
       createBoard();
     }
