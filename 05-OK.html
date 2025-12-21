@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8" />
+<title>記憶配對小遊戲（關卡制）</title>
+<style>
+*{box-sizing:border-box}
+body{font-family:system-ui;background:#f5f7fb;display:flex;flex-direction:column;align-items:center;padding:20px;transition:.3s}
+body.dark{background:#111827;color:#e5e7eb}
+h1{margin-bottom:10px}
+.info{display:flex;gap:16px;margin-bottom:12px;font-size:16px}
+.controls{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+button,select{padding:8px 14px;border-radius:10px;border:none;cursor:pointer;font-size:15px}
+button:hover{transform:scale(1.05)}
+.board{display:grid;gap:12px;margin-top:10px}
+.card{width:80px;height:80px;perspective:600px;cursor:pointer}
+.card-inner{width:100%;height:100%;transition:.4s;transform-style:preserve-3d}
+.card.flipped .card-inner{transform:rotateY(180deg)}
+.card.matched{pointer-events:none}
+.card-front,.card-back{position:absolute;width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:32px;border-radius:12px;backface-visibility:hidden}
+.card-front{background:#4f46e5;color:#fff}
+body.dark .card-front{background:#6366f1}
+.card-back{background:#fff;transform:rotateY(180deg);border:2px solid #e5e7eb}
+.shake{animation:shake .4s}
+@keyframes shake{0%{transform:translateX(0)}25%{transform:translateX(-6px)}50%{transform:translateX(6px)}75%{transform:translateX(-6px)}100%{transform:translateX(0)}}
+#flash{position:fixed;inset:0;background:rgba(220,38,38,.35);opacity:0;pointer-events:none;z-index:9}
+#flash.show{opacity:1}
+#overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:10}
+#overlay .box{background:#fff;padding:28px 36px;border-radius:16px;text-align:center;min-width:260px}
+body.dark #overlay .box{background:#1f2933;color:#e5e7eb}
+.old{color:#9ca3af}.new{color:#dc2626;font-weight:bold}
+</style>
+</head>
+<body>
+<h1>記憶配對（關卡制）</h1>
+<div class="info">
+  <div>🎯 關卡：<span id="level">1</span></div>
+  <div>⏱ 時間：<span id="time">0</span>s</div>
+  <div>❤️ 剩餘次數：<span id="moves">0</span></div>
+  <div>⭐ 配對成功：<span id="score">0</span></div>
+</div>
+<div class="controls">
+  <button onclick="location.reload()">🔄 重新載入遊戲</button>
+  <button onclick="restartLevel()">🔁 重玩本關</button>
+  <button onclick="toggleTheme()">🌙 切換主題</button>
+  <select onchange="changeSize(this.value)">
+    <option value="4">4×4</option>
+    <option value="5">5×5</option>
+  </select>
+</div>
+<div class="board" id="board"></div>
+<div id="flash"></div>
+<div id="overlay">
+  <div class="box">
+    <h2 id="overlayText"></h2>
+    <div id="overlayDiff"></div>
+    <div id="summary" style="margin-top:10px"></div>
+    <button id="overlayBtn" onclick="overlayAction()"></button>
+  </div>
+</div>
+
+<script>
+// ===== 音效（只宣告一次） =====
+let audioCtx;
+function playBeep(freq=440,duration=0.12,type='sine'){
+  if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+  if(audioCtx.state==='suspended') audioCtx.resume();
+  const osc=audioCtx.createOscillator();
+  const gain=audioCtx.createGain();
+  osc.type=type;osc.frequency.value=freq;
+  osc.connect(gain);gain.connect(audioCtx.destination);
+  gain.gain.setValueAtTime(0.12,audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+duration);
+  osc.start();osc.stop(audioCtx.currentTime+duration);
+}
+
+// ===== 遊戲資料 =====
+const symbols=['🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐨','🐯','🦁','🐮','🐷','🐸','🐵','🐔','🐧','🐦','🦄','⭐','🌙','⚡','🔥','💧','❄️','🎈'];
+let boardSize=4,level=1,score=0,movesLeft=0,time=0;
+let timerId=null,firstCard=null,lock=false,state='start',prevMoves=null;
+
+const levelEl=document.getElementById('level');
+const timeEl=document.getElementById('time');
+const movesEl=document.getElementById('moves');
+const scoreEl=document.getElementById('score');
+const boardEl=document.getElementById('board');
+const flashEl=document.getElementById('flash');
+
+function getMovesByLevel(l){return l<=1?18:l<=3?16:14}
+function shuffle(a){return a.sort(()=>Math.random()-.5)}
+
+function startTimer(){if(timerId)return;timerId=setInterval(()=>{time++;timeEl.textContent=time},1000)}
+
+function setupLevel(){
+  score=0;time=0;movesLeft=getMovesByLevel(level);
+  levelEl.textContent=level;
+  scoreEl.textContent=score;
+  movesEl.textContent=movesLeft;
+  timeEl.textContent=time;
+}
+
+function createBoard(){
+  boardEl.innerHTML='';
+  setupLevel();
+  firstCard=null;lock=false;
+  clearInterval(timerId);timerId=null;
+
+  const total=boardSize*boardSize;
+  const pairCount=Math.floor(total/2);
+  let base=shuffle([...symbols]).slice(0,pairCount);
+  let cards=[...base,...base];
+  if(total%2) cards.push('❓');
+  shuffle(cards);
+
+  boardEl.style.gridTemplateColumns=`repeat(${boardSize},80px)`;
+  cards.forEach(sym=>{
+    const c=document.createElement('div');
+    c.className='card';
+    c.innerHTML=`<div class="card-inner"><div class="card-front">?</div><div class="card-back">${sym}</div></div>`;
+    c.onclick=()=>flipCard(c,sym);
+    boardEl.appendChild(c);
+  });
+}
+
+function flipCard(card,sym){
+  if(lock||card.classList.contains('flipped')||state!=='playing') return;
+
+  playBeep(600,0.05);
+  startTimer();
+  card.classList.add('flipped');
+
+  if(!firstCard){
+    firstCard={card,sym};
+    return;
+  }
+
+  lock=true;
+
+  if(firstCard.sym===sym){
+    playBeep(880,0.15);
+    card.classList.add('matched');
+    firstCard.card.classList.add('matched');
+    score++;
+    scoreEl.textContent=score;
+    firstCard=null;
+    lock=false;
+
+    if(score===Math.floor((boardSize*boardSize)/2)){
+      clearInterval(timerId);
+      state='clear';
+      playWinSound();
+      showOverlay();
+    }
+  }else{
+    // ❌ 翻錯一組：剩餘次數 -1（無音效）
+    movesLeft--;
+    movesEl.textContent=movesLeft;
+
+    // ❌ 翻錯一組：紅色提示延後到兩張牌都翻好後
+    setTimeout(()=>{
+      flashEl.classList.add('show');
+      setTimeout(()=>flashEl.classList.remove('show'),200);
+    },300);
+
+    if(movesLeft<=0){
+      clearInterval(timerId);
+      state='fail';
+      showOverlay();
+      return;
+    }
+
+    setTimeout(()=>{
+      card.classList.remove('flipped','shake');
+      firstCard.card.classList.remove('flipped','shake');
+      firstCard=null;
+      lock=false;
+    },600);
+  }
+}
+
+function playWinSound(){
+  // 🎉 過關音效：上升音階
+  const now = audioCtx.currentTime;
+  [523,659,784].forEach((f,i)=>{
+    const o=audioCtx.createOscillator();
+    const g=audioCtx.createGain();
+    o.type='sine';
+    o.frequency.value=f;
+    o.connect(g);
+    g.connect(audioCtx.destination);
+    g.gain.setValueAtTime(0.0001,now+i*0.15);
+    g.gain.exponentialRampToValueAtTime(0.2,now+i*0.15+0.05);
+    g.gain.exponentialRampToValueAtTime(0.0001,now+i*0.15+0.25);
+    o.start(now+i*0.15);
+    o.stop(now+i*0.15+0.3);
+  });
+}
+
+function showOverlay(){
+  overlay.style.display='flex';
+  const cur=getMovesByLevel(level);
+  overlayDiff.innerHTML=(prevMoves!==null&&prevMoves!==cur)
+    ?`❤️ <span class="old">${prevMoves}</span> → <span class="new">${cur}</span>`
+    :`❤️ <span class="new">${cur}</span>`;
+
+  if(state==='start'){
+    overlayText.textContent='🎮 遊戲開始';
+    overlayBtn.textContent='▶️ 開始遊戲';
+    summary.innerHTML='';
+  }
+  if(state==='clear'){
+    overlayText.textContent=`第 ${level} 關結束`;
+    overlayBtn.textContent='➡️ 下一關';
+    summary.innerHTML=`⏱ 用時 ${time}s<br>❤️ 剩餘次數 ${movesLeft}<br>⭐ 配對成功 ${score}`;
+  }
+  if(state==='fail'){
+    overlayText.textContent=`第 ${level} 關失敗`;
+    overlayBtn.textContent='🔁 再試一次';
+    summary.innerHTML='';
+  }
+}
+
+function overlayAction(){
+  overlay.style.display='none';
+
+  if(state==='start'){
+    state='playing';
+    createBoard();
+    return;
+  }
+
+  if(state==='clear'){
+    prevMoves=getMovesByLevel(level);
+    level++;
+    levelEl.textContent=level;
+    state='playing';
+    createBoard();
+    return;
+  }
+
+  if(state==='fail'){
+    state='playing';
+    createBoard();
+    return;
+  }
+}
+
+function restartLevel(){
+  state='playing';
+  createBoard();
+}
+function changeSize(v){
+  boardSize=parseInt(v);
+  restartLevel();
+}
+function toggleTheme(){document.body.classList.toggle('dark')}
+
+showOverlay();
+</script>
+</body>
+</html>
